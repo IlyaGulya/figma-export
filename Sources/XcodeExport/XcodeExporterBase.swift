@@ -26,14 +26,29 @@ public class XcodeExporterBase {
     }
     
     func makeEnvironment(templatesPath: URL?) -> Environment {
-        let loader: FileSystemLoader
+        let loader: Loader
         if let templateURL = templatesPath {
             loader = FileSystemLoader(paths: [Path(templateURL.path)])
         } else {
-            loader = FileSystemLoader(paths: [
-                Path(Bundle.module.resourcePath! + "/Resources"),
-                Path(Bundle.module.resourcePath!)
-            ])
+            loader = DictionaryLoader(
+                templates: [
+                    "Bundle+extension.swift.stencil.include": PackageResources.Bundle_extension_swift_stencil_include,
+                    "Color+extension.swift.stencil": PackageResources.Color_extension_swift_stencil,
+                    "Font+extension.swift.stencil": PackageResources.Font_extension_swift_stencil,
+                    "header.stencil": PackageResources.header_stencil,
+                    "Image+extension.swift.stencil": PackageResources.Image_extension_swift_stencil,
+                    "Image+extension.swift.stencil.include": PackageResources.Image_extension_swift_stencil_include,
+                    "Label.swift.stencil": PackageResources.Label_swift_stencil,
+                    "LabelStyle.swift.stencil": PackageResources.LabelStyle_swift_stencil,
+                    "LabelStyle+extension.swift.stencil": PackageResources.LabelStyle_extension_swift_stencil,
+                    "UIColor+extension.swift.stencil": PackageResources.UIColor_extension_swift_stencil,
+                    "UIFont+extension.swift.stencil": PackageResources.UIFont_extension_swift_stencil,
+                    "UIImage+extension.swift.stencil": PackageResources.UIImage_extension_swift_stencil,
+                    "UIImage+extension.swift.stencil.include": PackageResources.UIImage_extension_swift_stencil_include
+                ].mapValues { value in
+                    String(bytes: value, encoding: .utf8)!
+                }
+            )
         }
         let ext = Extension()
         ext.registerStencilSwiftExtensions()

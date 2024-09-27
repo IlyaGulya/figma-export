@@ -1,4 +1,4 @@
-// swift-tools-version:5.7
+// swift-tools-version:5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -6,20 +6,20 @@ import PackageDescription
 let package = Package(
     name: "figma-export",
     platforms: [
-        .macOS(.v10_13)
+        .macOS(.v10_15),
     ],
     products: [
         .executable(name: "figma-export", targets: ["FigmaExport"])
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
-        .package(url: "https://github.com/jpsim/Yams.git", from: "5.0.0"),
+        .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.3"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.4"),
         .package(url: "https://github.com/stencilproject/Stencil.git", from: "0.15.1"),
         .package(url: "https://github.com/SwiftGen/StencilSwiftKit", from: "2.10.1"),
         .package(url: "https://github.com/tuist/XcodeProj.git", from: "8.10.0"),
-        .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "0.6.0")
-    ],
+        .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "0.6.0"),
+ ],
     targets: [
         
         // Main target
@@ -50,9 +50,9 @@ let package = Package(
                 "FigmaExportCore", .product(name: "Stencil", package: "Stencil"),
                 "StencilSwiftKit"
             ],
-			resources: [
-              	.copy("Resources/")
-	        ]
+            resources: [
+                .embedInCode("Resources/")
+            ]
         ),
 
         // Exports resources to Android project
@@ -60,7 +60,7 @@ let package = Package(
             name: "AndroidExport",
             dependencies: ["FigmaExportCore", "Stencil", "StencilSwiftKit"],
             resources: [
-                .copy("Resources/")
+                .embedInCode("Resources/")
             ]
         ),
         
