@@ -13,12 +13,13 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser", from: "1.0.0"),
-        .package(url: "https://github.com/jpsim/Yams.git", from: "5.1.3"),
+        .package(url: "https://github.com/IlyaGulya/Yams", branch: "main"),
         .package(url: "https://github.com/apple/swift-log.git", from: "1.4.4"),
-        .package(url: "https://github.com/stencilproject/Stencil.git", from: "0.15.1"),
-        .package(url: "https://github.com/SwiftGen/StencilSwiftKit", from: "2.10.1"),
-        .package(url: "https://github.com/tuist/XcodeProj.git", from: "8.10.0"),
+        .package(url: "https://github.com/IlyaGulya/Stencil", branch: "master"),
+        .package(url: "https://github.com/IlyaGulya/StencilSwiftKit", branch: "stable"),
+        .package(url: "https://github.com/IlyaGulya/XcodeProj", branch: "main"),
         .package(url: "https://github.com/pointfreeco/swift-custom-dump", from: "0.6.0"),
+        .package(url: "https://github.com/IlyaGulya/PathKit", branch: "master"),
  ],
     targets: [
         
@@ -47,7 +48,8 @@ let package = Package(
         .target(
             name: "XcodeExport",
             dependencies: [
-                "FigmaExportCore", .product(name: "Stencil", package: "Stencil"),
+                "FigmaExportCore",
+                "Stencil",
                 "StencilSwiftKit"
             ],
             resources: [
@@ -58,7 +60,11 @@ let package = Package(
         // Exports resources to Android project
         .target(
             name: "AndroidExport",
-            dependencies: ["FigmaExportCore", "Stencil", "StencilSwiftKit"],
+            dependencies: [
+                "FigmaExportCore",
+                "Stencil",
+                "StencilSwiftKit"
+            ],
             resources: [
                 .embedInCode("Resources/")
             ]
@@ -77,7 +83,8 @@ let package = Package(
         .testTarget(
             name: "XcodeExportTests",
             dependencies: [
-                "XcodeExport", .product(name: "CustomDump", package: "swift-custom-dump"),
+                "XcodeExport",
+                .product(name: "CustomDump", package: "swift-custom-dump"),
                 "StencilSwiftKit"
             ]
         ),
