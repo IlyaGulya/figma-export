@@ -1,8 +1,9 @@
 name: Release
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
 env:
@@ -11,8 +12,8 @@ env:
   SWIFT_LINUX_SDK_VERSION: "0.0.1"
 
 jobs:
-  release:
-    name: Build and publish binaries
+  build:
+    name: Build binaries
     runs-on: macos-latest
     strategy:
       matrix:
@@ -26,11 +27,11 @@ jobs:
           - platform: linux
             arch: aarch64
             build_args: "--swift-sdk aarch64-swift-linux-musl"
-            linker_flags: "-Xlinker -lz -Xlinker -licuuc -Xlinker -licudata -Xlinker -lssl -Xlinker -lcrypto"
+            linker_flags: "-Xlinker -strip-all -Xlinker -lz -Xlinker -licuuc -Xlinker -licudata -Xlinker -lssl -Xlinker -lcrypto"
           - platform: linux
             arch: x86_64
             build_args: "--swift-sdk x86_64-swift-linux-musl"
-            linker_flags: "-Xlinker -lz -Xlinker -licuuc -Xlinker -licudata -Xlinker -lssl -Xlinker -lcrypto"
+            linker_flags: "-Xlinker -strip-all -Xlinker -lz -Xlinker -licuuc -Xlinker -licudata -Xlinker -lssl -Xlinker -lcrypto"
 
     steps:
       - uses: actions/checkout@v4
@@ -48,18 +49,37 @@ jobs:
           SDK_URL="$SDK_BASE_URL/$SDK_FILENAME"
           swift sdk install "$SDK_URL" --checksum "${SWIFT_LINUX_SDK_CHECKSUM}"
 
-      - name: Create release assets directory
-        run: mkdir release-assets
-
       - name: Build binary
         # language=bash
         run: |
           swift build -c release ${{ matrix.build_args }} ${{ matrix.linker_flags }}
-          mv .build/release/figma-export release-assets/figma-export-${{ matrix.arch }}-${{ matrix.platform }}
+          mv .build/release/figma-export figma-export-${{ matrix.arch }}-${{ matrix.platform }}
 
-      - name: Upload assets to release
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: figma-export-${{ matrix.arch }}-${{ matrix.platform }}
+          path: figma-export-${{ matrix.arch }}-${{ matrix.platform }}
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+
+      - name: Create Release
         uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          make_latest: true
+          draft: false
+          files: release-assets/**/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          files: release-assets/*
