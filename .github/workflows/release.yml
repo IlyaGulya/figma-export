@@ -34,7 +34,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: IlyaGulya/setup-swift@14ac4bf1eca43a431dd496e3259aa5cdb4e828a1
+      - uses: IlyaGulya/setup-swift@85064347ce8271c9fb1b6cf4727d18b9d076bda9
         with:
           swift-version: ${{ env.SWIFT_VERSION }}
 
