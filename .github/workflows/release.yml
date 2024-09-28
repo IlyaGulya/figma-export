@@ -2,42 +2,64 @@ name: Release
 
 on:
   release:
-    types:
-      - published
+    types: [published]
   workflow_dispatch:
+
+env:
+  SWIFT_VERSION: "6.0.1"
+  SWIFT_LINUX_SDK_CHECKSUM: "d4f46ba40e11e697387468e18987ee622908bc350310d8af54eb5e17c2ff5481"
+  SWIFT_LINUX_SDK_VERSION: "0.0.1"
 
 jobs:
   release:
+    name: Build and publish binaries
+    runs-on: macos-latest
     strategy:
       matrix:
         include:
-          - os: macos-latest
-            arch:
-              - arm64
-              - x86_64
-            platform: apple-macos
-          - os: ubuntu-24.04
-            arch:
-              - aarch64
-              - x86_64
-            platform: unknown-linux-gnu
-    name: Publish ${{ matrix.os }} binaries to release
-    runs-on: ${{ matrix.os }}
+          - platform: macos
+            arch: arm64
+            build_args: "--arch arm64"
+          - platform: macos
+            arch: x86_64
+            build_args: "--arch x86_64"
+          - platform: linux
+            arch: aarch64
+            build_args: "--swift-sdk aarch64-swift-linux-musl"
+            linker_flags: "-Xlinker -lz -Xlinker -licuuc -Xlinker -licudata -Xlinker -lssl -Xlinker -lcrypto"
+          - platform: linux
+            arch: x86_64
+            build_args: "--swift-sdk x86_64-swift-linux-musl"
+            linker_flags: "-Xlinker -lz -Xlinker -licuuc -Xlinker -licudata -Xlinker -lssl -Xlinker -lcrypto"
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: ${{ env.SWIFT_VERSION }}
 
-      - name: Build
+      - name: Install Swift linux static sdk
+        if: matrix.platform == 'linux'
+        # language=bash
         run: |
-          for arch in ${{ join(matrix.arch, ' ') }}; do
-            swift build -c release --arch $arch
-            mv .build/release/figma-export figma-export-$arch-${{ matrix.platform }}
-          done
+          export _V="$SWIFT_VERSION"
+          SDK_BASE_URL="https://download.swift.org/swift-${_V}-release/static-sdk/swift-${_V}-RELEASE"
+          SDK_FILENAME="swift-${_V}-RELEASE_static-linux-${SWIFT_LINUX_SDK_VERSION}.artifactbundle.tar.gz"
+          SDK_URL="$SDK_BASE_URL/$SDK_FILENAME"
+          swift sdk install "$SDK_URL" --checksum "${SWIFT_LINUX_SDK_CHECKSUM}"
 
-      - name: "Upload assets to a release"
+      - name: Create release assets directory
+        run: mkdir release-assets
+
+      - name: Build binary
+        # language=bash
+        run: |
+          swift build -c release ${{ matrix.build_args }} ${{{ matrix.linker_flags }}
+          mv .build/release/figma-export release-assets/figma-export-${{ matrix.arch }}-${{ matrix.platform }}
+
+      - name: Upload assets to release
         uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: |
-            figma-export-*-${{ matrix.platform }}
+          files: release-assets/*
