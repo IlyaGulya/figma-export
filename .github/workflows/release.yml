@@ -15,6 +15,8 @@ jobs:
   build:
     name: Build binaries
     runs-on: macos-latest
+    env:
+      FILE_NAME: "figma-export-${{ matrix.arch }}-${{ matrix.platform }}"
     strategy:
       matrix:
         include:
@@ -53,13 +55,19 @@ jobs:
         # language=bash
         run: |
           swift build -c release ${{ matrix.build_args }} ${{ matrix.linker_flags }}
-          mv .build/release/figma-export figma-export-${{ matrix.arch }}-${{ matrix.platform }}
+          mv .build/release/figma-export "$FILE_NAME"
+
+      - name: Compress executable
+        uses: svenstaro/upx-action@v2
+        with:
+          files: |
+            ${{ env.FILE_NAME }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: figma-export-${{ matrix.arch }}-${{ matrix.platform }}
-          path: figma-export-${{ matrix.arch }}-${{ matrix.platform }}
+          name: ${{ env.FILE_NAME }}
+          path: ${{ env.FILE_NAME }}
 
   release:
     name: Create Release
