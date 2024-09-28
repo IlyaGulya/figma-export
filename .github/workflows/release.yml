@@ -58,13 +58,13 @@ jobs:
           mv .build/release/figma-export "$FILE_NAME"
 
       - name: Compress executable
+        if: matrix.platform == 'linux'
         uses: svenstaro/upx-action@v2
         with:
           files: |
             ${{ env.FILE_NAME }}
 
       - name: Upload artifact
-        if: matrix.platform == 'linux'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.FILE_NAME }}
