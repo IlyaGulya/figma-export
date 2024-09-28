@@ -54,7 +54,7 @@ jobs:
       - name: Build binary
         # language=bash
         run: |
-          swift build -c release ${{ matrix.build_args }} ${{{ matrix.linker_flags }}
+          swift build -c release ${{ matrix.build_args }} ${{ matrix.linker_flags }}
           mv .build/release/figma-export release-assets/figma-export-${{ matrix.arch }}-${{ matrix.platform }}
 
       - name: Upload assets to release
